@@ -85,26 +85,22 @@ export default class {
     if (typeof $('#modaleFileAdmin1').modal === 'function') $('#modaleFileAdmin1').modal('show')
   }
 
+  // Show the selected ticket in the right panel.
+  // Simplified: always show the clicked bill (no shared toggle counter),
+  // and highlight the selected bill. This allows selecting tickets from
+  // multiple lists after they have been expanded.
   handleEditTicket(e, bill, bills) {
-    if (this.counter === undefined || this.id !== bill.id) this.counter = 0
-    if (this.id === undefined || this.id !== bill.id) this.id = bill.id
-    if (this.counter % 2 === 0) {
-      bills.forEach(b => {
-        $(`#open-bill${b.id}`).css({ background: '#0D5AE5' })
-      })
-      $(`#open-bill${bill.id}`).css({ background: '#2A2B35' })
-      $('.dashboard-right-container div').html(DashboardFormUI(bill))
-      $('.vertical-navbar').css({ height: '150vh' })
-      this.counter ++
-    } else {
-      $(`#open-bill${bill.id}`).css({ background: '#0D5AE5' })
+    // reset background for all bills
+    bills.forEach(b => {
+      $(`#open-bill${b.id}`).css({ background: '#0D5AE5' })
+    })
+    // highlight selected bill
+    $(`#open-bill${bill.id}`).css({ background: '#2A2B35' })
+    // render the bill form in the right container
+    $('.dashboard-right-container div').html(DashboardFormUI(bill))
+    $('.vertical-navbar').css({ height: '150vh' })
 
-      $('.dashboard-right-container div').html(`
-        <div id="big-billed-icon" data-testid="big-billed-icon"> ${BigBilledIcon} </div>
-      `)
-      $('.vertical-navbar').css({ height: '120vh' })
-      this.counter ++
-    }
+    // wire buttons / eye icon for this bill
     $('#icon-eye-d').click(this.handleClickIconEye)
     $('#btn-accept-bill').click((e) => this.handleAcceptSubmit(e, bill))
     $('#btn-refuse-bill').click((e) => this.handleRefuseSubmit(e, bill))
@@ -131,26 +127,26 @@ export default class {
   }
 
   handleShowTickets(e, bills, index) {
-    if (this.counter === undefined || this.index !== index) this.counter = 0
-    if (this.index === undefined || this.index !== index) this.index = index
-    if (this.counter % 2 === 0) {
-      $(`#arrow-icon${this.index}`).css({ transform: 'rotate(0deg)'})
-      $(`#status-bills-container${this.index}`)
-        .html(cards(filteredBills(bills, getStatus(this.index))))
-      this.counter ++
+    this.openedLists = this.openedLists || {}
+    const isOpening = !this.openedLists[index]
+    this.openedLists[index] = isOpening
+
+    if (isOpening) {
+      $(`#arrow-icon${index}`).css({ transform: 'rotate(0deg)'})
+      $(`#status-bills-container${index}`)
+        .html(cards(filteredBills(bills, getStatus(index))))
     } else {
-      $(`#arrow-icon${this.index}`).css({ transform: 'rotate(90deg)'})
-      $(`#status-bills-container${this.index}`)
+      $(`#arrow-icon${index}`).css({ transform: 'rotate(90deg)'})
+      $(`#status-bills-container${index}`)
         .html("")
-      this.counter ++
     }
 
     bills.forEach(bill => {
+      $(`#open-bill${bill.id}`).off('click')
       $(`#open-bill${bill.id}`).click((e) => this.handleEditTicket(e, bill, bills))
     })
 
     return bills
-
   }
 
   getBillsAllUsers = () => {
