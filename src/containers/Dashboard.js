@@ -85,22 +85,17 @@ export default class {
     if (typeof $('#modaleFileAdmin1').modal === 'function') $('#modaleFileAdmin1').modal('show')
   }
 
-  // Show the selected ticket in the right panel.
-  // Simplified: always show the clicked bill (no shared toggle counter),
-  // and highlight the selected bill. This allows selecting tickets from
-  // multiple lists after they have been expanded.
+
   handleEditTicket(e, bill, bills) {
-    // reset background for all bills
+
     bills.forEach(b => {
       $(`#open-bill${b.id}`).css({ background: '#0D5AE5' })
     })
-    // highlight selected bill
+
     $(`#open-bill${bill.id}`).css({ background: '#2A2B35' })
-    // render the bill form in the right container
     $('.dashboard-right-container div').html(DashboardFormUI(bill))
     $('.vertical-navbar').css({ height: '150vh' })
 
-    // wire buttons / eye icon for this bill
     $('#icon-eye-d').click(this.handleClickIconEye)
     $('#btn-accept-bill').click((e) => this.handleAcceptSubmit(e, bill))
     $('#btn-refuse-bill').click((e) => this.handleRefuseSubmit(e, bill))
