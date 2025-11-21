@@ -87,19 +87,39 @@ export default class {
 
 
   handleEditTicket(e, bill, bills) {
+  // initialise le cache d'état par facture
+  this.openedBills = this.openedBills || {}
 
-    bills.forEach(b => {
-      $(`#open-bill${b.id}`).css({ background: '#0D5AE5' })
-    })
+  // reset background pour toutes les factures
+  bills.forEach(b => {
+    $(`#open-bill${b.id}`).css({ background: '#0D5AE5' })
+  })
 
+  const isOpen = !!this.openedBills[bill.id]
+
+  if (!isOpen) {
+    // ouvrir la facture : surligner et afficher le formulaire
     $(`#open-bill${bill.id}`).css({ background: '#2A2B35' })
     $('.dashboard-right-container div').html(DashboardFormUI(bill))
     $('.vertical-navbar').css({ height: '150vh' })
 
-    $('#icon-eye-d').click(this.handleClickIconEye)
-    $('#btn-accept-bill').click((e) => this.handleAcceptSubmit(e, bill))
-    $('#btn-refuse-bill').click((e) => this.handleRefuseSubmit(e, bill))
+    // binder les handlers (off pour éviter double binding)
+    $('#icon-eye-d').off('click').click(this.handleClickIconEye)
+    $('#btn-accept-bill').off('click').click((ev) => this.handleAcceptSubmit(ev, bill))
+    $('#btn-refuse-bill').off('click').click((ev) => this.handleRefuseSubmit(ev, bill))
+
+    this.openedBills[bill.id] = true
+  } else {
+    // fermer la facture : remettre le background et afficher l'icône "big bill"
+    $(`#open-bill${bill.id}`).css({ background: '#0D5AE5' })
+    $('.dashboard-right-container div').html(`
+      <div id="big-billed-icon" data-testid="big-billed-icon"> ${BigBilledIcon} </div>
+    `)
+    $('.vertical-navbar').css({ height: '120vh' })
+
+    this.openedBills[bill.id] = false
   }
+}
 
   handleAcceptSubmit = (e, bill) => {
     const newBill = {
