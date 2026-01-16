@@ -9,6 +9,9 @@ import NewBill from "../containers/NewBill.js"
 import { localStorageMock } from "../__mocks__/localStorage.js"
 import mockStore from "../__mocks__/store"
 import { ROUTES_PATH } from "../constants/routes.js"
+import router from "../app/Router.js"
+
+jest.mock("../app/store", () => mockStore)
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on NewBill Page", () => {
@@ -455,6 +458,92 @@ describe("Given I am connected as an employee", () => {
         await waitFor(() => {
           expect(consoleErrorSpy).toHaveBeenCalledWith(
             expect.objectContaining({ message: "Update failed" })
+          )
+        })
+
+        consoleErrorSpy.mockRestore()
+      })
+    })
+  })
+})
+
+// test d'intégration POST
+describe("Given I am a user connected as Employee", () => {
+  describe("When I create a new bill", () => {
+    describe("When an error occurs on API", () => {
+      beforeEach(() => {
+        jest.spyOn(mockStore, "bills")
+        Object.defineProperty(window, "localStorage", {
+          value: localStorageMock,
+        })
+        window.localStorage.setItem(
+          "user",
+          JSON.stringify({
+            type: "Employee",
+            email: "a@a",
+          })
+        )
+        document.body.innerHTML = ""
+        const root = document.createElement("div")
+        root.setAttribute("id", "root")
+        document.body.appendChild(root)
+        router()
+      })
+
+      test("fetches bills from an API and fails with 404 message error", async () => {
+        mockStore.bills.mockImplementationOnce(() => {
+          return {
+            create: () => {
+              return Promise.reject(new Error("Erreur 404"))
+            },
+          }
+        })
+
+        window.onNavigate(ROUTES_PATH.NewBill)
+        await waitFor(() => screen.getByTestId("form-new-bill"))
+
+        const consoleErrorSpy = jest
+          .spyOn(console, "error")
+          .mockImplementation()
+
+        const fileInput = screen.getByTestId("file")
+        const file = new File(["test"], "test.jpg", { type: "image/jpeg" })
+
+        await userEvent.upload(fileInput, file)
+
+        await waitFor(() => {
+          expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect.objectContaining({ message: "Erreur 404" })
+          )
+        })
+
+        consoleErrorSpy.mockRestore()
+      })
+
+      test("fetches bills from an API and fails with 500 message error", async () => {
+        mockStore.bills.mockImplementationOnce(() => {
+          return {
+            create: () => {
+              return Promise.reject(new Error("Erreur 500"))
+            },
+          }
+        })
+
+        window.onNavigate(ROUTES_PATH.NewBill)
+        await waitFor(() => screen.getByTestId("form-new-bill"))
+
+        const consoleErrorSpy = jest
+          .spyOn(console, "error")
+          .mockImplementation()
+
+        const fileInput = screen.getByTestId("file")
+        const file = new File(["test"], "test.jpg", { type: "image/jpeg" })
+
+        await userEvent.upload(fileInput, file)
+
+        await waitFor(() => {
+          expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect.objectContaining({ message: "Erreur 500" })
           )
         })
 
